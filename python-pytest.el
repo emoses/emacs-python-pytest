@@ -114,6 +114,12 @@ When non-nil only ‘test_foo()’ will match, and nothing else."
   :group 'python-pytest
   :type 'boolean)
 
+(defcustom python-pytest-shell-startfile nil
+  "If set, will provide the comint shell that runs pytest with the path to a
+ startfile to evaluate. "
+  :group 'python-pytest
+  :type 'string)
+
 (defcustom python-pytest-unsaved-buffers-behavior 'ask-all
   "Whether to ask whether unsaved buffers should be saved before running pytest."
   :group 'python-pytest
@@ -371,7 +377,9 @@ With a prefix ARG, allow editing."
          'python-pdbtrack-comint-output-filter-function
          nil t))
       (run-hooks 'python-pytest-setup-hook)
-      (make-comint-in-buffer "pytest" buffer "sh" nil "-c" command)
+      (when python-pytest-shell-startfile
+        (setq command (format "source %s;%s" python-pytest-shell-startfile command)))
+      (make-comint-in-buffer "pytest" buffer "sh" python-pytest-shell-startfile "-c" command)
       (run-hooks 'python-pytest-started-hook)
       (setq process (get-buffer-process buffer))
       (set-process-sentinel process #'python-pytest--process-sentinel)
