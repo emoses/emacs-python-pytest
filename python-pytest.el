@@ -170,6 +170,7 @@ When non-nil only ‘test_foo()’ will match, and nothing else."
     (?F "Test this file  " python-pytest-file)
     (?d "Test def/class" python-pytest-function-dwim)
     (?D "This def/class" python-pytest-function)
+    (?C "This class" python-pytest-class)
     "Repeat tests"
     (?r "Repeat last test run" python-pytest-repeat))
   :max-action-columns 2
@@ -214,6 +215,16 @@ With a prefix argument, allow editing."
     (buffer-file-name)
     (python-pytest-arguments)))
   (python-pytest-file (python-pytest--sensible-test-file file) args))
+
+;;;###autoload
+(defun python-pytest-class (file func args)
+  (interactive
+   (list
+    (buffer-file-name)
+    (python-pytest--current-defun)
+    (python-pytest-arguments)))
+  (let ((classname (first (split-string func "\\."))))
+    (python-pytest-function file classname args)))
 
 ;;;###autoload
 (defun python-pytest-function (file func args)
@@ -520,7 +531,7 @@ Example: ‘MyABCThingy.__repr__’ becomes ‘test_my_abc_thingy_repr’."
         ((buffers
           (projectile-buffers-with-file (projectile-project-buffers)))
          (modified-buffers
-          (-filter 'buffer-modified-p buffers))
+          (-filter '(lambda (b) (or (buffer-modified-p b) (read-only))) buffer-modified-p buffers))
          (confirmed
           (or (eq python-pytest-unsaved-buffers-behavior 'save-all)
               (y-or-n-p
