@@ -531,7 +531,7 @@ Example: ‘MyABCThingy.__repr__’ becomes ‘test_my_abc_thingy_repr’."
         ((buffers
           (projectile-buffers-with-file (projectile-project-buffers)))
          (modified-buffers
-          (-filter '(lambda (b) (or (buffer-modified-p b) (read-only))) buffer-modified-p buffers))
+          (-filter '(lambda (b) (or (buffer-modified-p b) buffer-read-only)) buffers))
          (confirmed
           (or (eq python-pytest-unsaved-buffers-behavior 'save-all)
               (y-or-n-p
