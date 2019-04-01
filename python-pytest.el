@@ -138,6 +138,9 @@ When non-nil only ‘test_foo()’ will match, and nothing else."
 (defvar-local python-pytest--current-command nil
   "Current command; used in python-pytest-mode buffers.")
 
+(defvar python-pytest--kill-command-no-execute nil
+  "Only copy the current command to the kill ring instead of executing it.")
+
 (fmakunbound 'python-pytest-popup)
 (makunbound 'python-pytest-popup)
 
@@ -173,8 +176,23 @@ When non-nil only ‘test_foo()’ will match, and nothing else."
     (?C "This class" python-pytest-class)
     "Repeat tests"
     (?r "Repeat last test run" python-pytest-repeat))
+  :variables
+  '("Options"
+    (?y "Yank command (don't execute)"
+        python-pytest--toggle-kill-command
+        python-pytest--show-kill-command))
   :max-action-columns 2
   :default-action 'python-pytest-repeat)
+
+(defun python-pytest--toggle-kill-command (val)
+  (interactive (list python-pytest--kill-command-no-execute))
+  (setq python-pytest--kill-command-no-execute (not val)))
+
+(defun python-pytest--show-kill-command ()
+  (let ((value (if python-pytest--kill-command-no-execute
+                   "true"
+                 "false")))
+    (format "Yank command (don't execute): %s" value)))
 
 ;;;###autoload
 (defun python-pytest (&optional args)
@@ -359,9 +377,13 @@ With a prefix ARG, allow editing."
     (setq python-pytest--history (-uniq python-pytest--history))
     (puthash (python-pytest--project-root) command
              python-pytest--project-last-command)
-    (python-pytest--run-as-comint
-     :command command
-     :popup-arguments popup-arguments)))
+    (if python-pytest--kill-command-no-execute
+        (progn
+          (kill-new command)
+          (message "Copied to kill ring: %s" command))
+        (python-pytest--run-as-comint
+         :command command
+         :popup-arguments popup-arguments))))
 
 (cl-defun python-pytest--run-as-comint (&key command popup-arguments)
   "Run a pytest comint session for COMMAND."
