@@ -380,7 +380,9 @@ With a prefix ARG, allow editing."
     (if python-pytest--kill-command-no-execute
         (progn
           (kill-new command)
-          (message "Copied to kill ring: %s" command))
+          (message "Copied to kill ring: %s" command)
+          ;;Reset it for next time
+          (setq python-pytest--kill-command-no-execute nil))
         (python-pytest--run-as-comint
          :command command
          :popup-arguments popup-arguments))))
